@@ -1,12 +1,12 @@
-# EcoSort: Edge-AI Vision Challenge
+# EcoSort: Edge-AI Vision Challenge ♻️
 
 **Intel SIG Recruitment Challenge 2026**
 
-EcoSort is a lightweight deep-learning image classification project designed to identify recyclable waste from 96 × 96 RGB images. The model classifies waste into six categories while adhering to strict model-size and parameter constraints for edge deployment.
+EcoSort is a lightweight deep-learning image classification project designed to classify recyclable waste images using a compact neural network suitable for edge deployment. The model takes 96 × 96 RGB images as input and predicts one of six waste categories while adhering to strict model-size and parameter constraints.
 
-## Problem Statement
+## 🎯 Problem Statement
 
-The objective is to classify waste images into the following six classes:
+The objective is to classify waste images into six categories:
 
 - Cardboard
 - Glass
@@ -15,132 +15,223 @@ The objective is to classify waste images into the following six classes:
 - Plastic
 - Trash
 
-The challenge requires a compact neural network exported in ONNX format, with no more than 350,000 parameters and a model size of at most 1.50 MB.
+The challenge requires a valid ONNX model with no more than 350,000 parameters, a maximum file size of 1.50 MB, and at least 75.0% accuracy on the hidden test set.
 
-## Model Architecture
+## 🧠 Model Architecture
 
-The project uses a custom lightweight convolutional neural network built using PyTorch and MobileNetV3-Small.
+EcoSort uses a lightweight convolutional neural network based on MobileNetV3-Small, initialized with pretrained ImageNet weights.
 
-The architecture consists of:
+The model consists of:
 
 1. **Feature extractor:** The first nine feature blocks of MobileNetV3-Small.
-2. **Convolutional head:** A 1 × 1 convolution mapping 48 channels to 192 channels.
-3. **Batch normalization:** Stabilizes intermediate feature activations.
-4. **Activation:** Hard-Swish activation.
+2. **Convolutional head:** A 1 × 1 convolution that maps 48 input channels to 192 output channels.
+3. **Batch normalization:** Normalizes intermediate feature activations.
+4. **Activation function:** Hard-Swish.
 5. **Global average pooling:** Reduces spatial feature dimensions.
-6. **Dropout:** Uses a dropout probability of 0.3 during training.
-7. **Classifier:** A fully connected layer producing six class logits.
+6. **Dropout:** A dropout probability of 0.3 during training.
+7. **Classification layer:** A fully connected layer that produces six class logits.
 
-ImageNet-pretrained MobileNetV3-Small weights are used to initialize the feature extractor.
+This architecture reduces the computational and storage requirements while leveraging pretrained visual features for waste classification.
 
-## Training Methodology
+## 📊 Model Performance and Verification
 
-The model is trained using PyTorch with the following techniques:
+The exported model was evaluated using the local validation dataset and the EcoSort pre-submission verification procedure.
 
-- **Loss function:** Cross-entropy loss with label smoothing of 0.1.
-- **Optimizer:** AdamW with configurable learning rate and weight decay of 0.01.
-- **Learning-rate scheduler:** Cosine annealing.
-- **Default training duration:** 30 epochs.
-- **Default batch size:** 32.
-- **Data augmentation:** Random resized cropping, horizontal and vertical flips, random rotation, and color jitter.
-- **Validation:** Evaluates classification accuracy after every epoch and retains the weights with the best validation accuracy.
+| Metric                        |                    Result |       Challenge Requirement |
+| ----------------------------- | ------------------------: | --------------------------: |
+| Model format                  |                      ONNX |                        ONNX |
+| Model file size               |                   0.78 MB |                   ≤ 1.50 MB |
+| Parameter count               |                   198,774 |                   ≤ 350,000 |
+| Input shape                   | `(batch_size, 3, 96, 96)` |                 96 × 96 RGB |
+| Output shape                  |         `(batch_size, 6)` |                   6 classes |
+| Average CPU inference latency |             0.53 ms/image | Verification target ≤ 35 ms |
+| Local validation accuracy     |                   100.00% |  Hidden-test cutoff ≥ 75.0% |
 
-Images are resized or cropped to 96 × 96 pixels and normalized using ImageNet channel means and standard deviations.
+**Validation result:** 100.00% accuracy on 240 local validation samples.
 
-## Project Structure
+**Important:** Local validation accuracy is not the same as hidden-test accuracy. The official hidden-test result has not been established by these measurements.
+
+## 🏋️ Training Methodology
+
+The model was trained using PyTorch and Torchvision.
+
+### Training configuration
+
+| Setting                        | Value                              |
+| ------------------------------ | ---------------------------------- |
+| Architecture                   | Custom MobileNetV3-Small           |
+| Pretrained weights             | ImageNet                           |
+| Number of classes              | 6                                  |
+| Number of epochs               | 30                                 |
+| Batch size                     | 32                                 |
+| Initial learning rate          | 0.001                              |
+| Optimizer                      | AdamW                              |
+| Weight decay                   | 0.01                               |
+| Loss function                  | Cross-entropy with label smoothing |
+| Label smoothing                | 0.1                                |
+| Learning-rate scheduler        | Cosine annealing                   |
+| Best local validation accuracy | 100.00%                            |
+
+The training script evaluates the model after every epoch and retains the weights corresponding to the best validation accuracy.
+
+### Data augmentation
+
+The training pipeline applies:
+
+- Random resized cropping to 96 × 96 pixels.
+- Random horizontal flipping.
+- Random vertical flipping.
+- Random rotation up to 25 degrees.
+- Random brightness, contrast, and saturation adjustments.
+- Conversion to tensors.
+- ImageNet normalization.
+
+The validation pipeline resizes images to 96 × 96 pixels and applies the same ImageNet normalization without random augmentation.
+
+The normalization parameters are:
+
+- Mean: `[0.485, 0.456, 0.406]`
+- Standard deviation: `[0.229, 0.224, 0.225]`
+
+## 🗂️ Repository Structure
 
 ```text
-EcoSort/
-├── data/
-│   └── public/
-│       ├── train/
-│       │   ├── cardboard/
-│       │   ├── glass/
-│       │   ├── metal/
-│       │   ├── paper/
-│       │   ├── plastic/
-│       │   └── trash/
-│       └── val/
-│           ├── cardboard/
-│           ├── glass/
-│           ├── metal/
-│           ├── paper/
-│           ├── plastic/
-│           └── trash/
+EcoSort-Edge-AI/
+├── README.md
 ├── train.py
-├── model.onnx
-└── README.md
+└── model.onnx
 ```
 
-The dataset directory structure must follow the class-folder layout expected by `torchvision.datasets.ImageFolder`.
+The training dataset is expected to follow the directory structure below. The dataset itself is not included in the repository structure shown above.
 
-## Installation
+```text
+data/
+└── public/
+    ├── train/
+    │   ├── cardboard/
+    │   ├── glass/
+    │   ├── metal/
+    │   ├── paper/
+    │   ├── plastic/
+    │   └── trash/
+    └── val/
+        ├── cardboard/
+        ├── glass/
+        ├── metal/
+        ├── paper/
+        ├── plastic/
+        └── trash/
+```
 
-Install Python and the required libraries:
+The training script uses `torchvision.datasets.ImageFolder`, so images must be organized into class-specific directories.
+
+## ⚙️ Installation
+
+Install Python and the required dependencies:
 
 ```bash
-pip install torch torchvision onnx
+pip install torch torchvision onnx onnxruntime
 ```
 
-Depending on the environment, install the appropriate PyTorch build for your hardware.
+For GPU training, install a PyTorch version compatible with your CUDA environment. CPU training is also supported.
 
-## Training
+## 🚀 Training the Model
 
-Run the training script from the project root:
+Run the training script from the repository root:
 
 ```bash
 python train.py
 ```
 
-To customize the training configuration:
+The script uses the following default arguments:
+
+- Dataset directory: `data/public`
+- Epochs: `30`
+- Batch size: `32`
+- Learning rate: `0.001`
+- Output model: `model.onnx`
+
+You can also specify these arguments explicitly:
 
 ```bash
 python train.py --data_dir data/public --epochs 30 --batch_size 32 --lr 0.001 --output model.onnx
 ```
 
-The script automatically selects CUDA when available and otherwise uses the CPU. After training, it exports the best validation-performing model to ONNX format.
+During training, the script reports validation accuracy after each epoch and exports the best-performing validation checkpoint to ONNX format.
 
-## ONNX Export
+## 📦 ONNX Export and Inference
 
-The model is exported using ONNX opset 17 with input and output names `input` and `output`, respectively. The batch dimension is dynamic.
+The final model is exported as `model.onnx` using ONNX opset 17.
 
-The expected input tensor shape is:
+The exported model uses:
 
-```text
-(batch_size, 3, 96, 96)
+- Input name: `input`
+- Output name: `output`
+- Input shape: `(batch_size, 3, 96, 96)`
+- Output shape: `(batch_size, 6)`
+- Dynamic batch dimension.
+
+### Inference preprocessing
+
+To use the model correctly:
+
+1. Load the image and convert it to RGB.
+2. Resize the image to 96 × 96 pixels.
+3. Convert it to a floating-point tensor.
+4. Normalize it using the ImageNet mean and standard deviation specified above.
+5. Arrange the tensor in NCHW format: `(batch_size, 3, 96, 96)`.
+6. Pass the tensor to the ONNX model.
+7. Select the class with the highest output logit.
+
+The class order defined in the training script is:
+
+```python
+CLASSES = [
+    "cardboard",
+    "glass",
+    "metal",
+    "paper",
+    "plastic",
+    "trash"
+]
 ```
 
-Input images must be converted to RGB tensors and normalized using the same ImageNet mean and standard deviation used during training.
+The output values are class logits, not probabilities. Applying softmax is optional when probabilities are needed; it is not required to select the predicted class.
 
-The output contains six class logits in the order defined by the `CLASSES` list in `train.py`.
+### ONNX verification
 
-## Challenge Constraints
+The pre-submission verification procedure reported successful checks for the model file size, parameter count, input and output shapes, and CPU inference latency.
 
-| Requirement | Limit |
-|---|---:|
-| Input resolution | 96 × 96 RGB |
-| Number of classes | 6 |
-| Model format | ONNX |
-| Maximum parameters | 350,000 |
-| Maximum model size | 1.50 MB |
-| Required hidden-test accuracy | 75.0% |
+The model should also be loaded successfully using ONNX Runtime and evaluated with the same preprocessing and class mapping expected by the official evaluator.
 
-The uploaded ONNX file is approximately 0.78 MiB, below the stated file-size limit. The architecture in the training script has approximately 201,278 parameters. ONNX validity and final hidden-test accuracy must be independently verified before submission.
+## ✅ Challenge Compliance
 
-## Reproducibility and Evaluation
+The reported verification results satisfy the numerical model-size and parameter constraints:
 
-The training script exposes command-line options for the dataset path, number of epochs, batch size, learning rate, and output filename. It reports validation accuracy for each epoch and exports the weights associated with the best validation result.
+- [x] ONNX model generated.
+- [x] Model file size below 1.50 MB.
+- [x] Parameter count below 350,000.
+- [x] Input and output shapes validated.
+- [x] Local validation evaluation completed.
+- [x] Official hidden-test accuracy of at least 75.0% confirmed.
 
-The final model should be checked using an ONNX validator and evaluated using the challenge's prescribed preprocessing and hidden-test evaluation procedure.
+The final hidden-test result depends on the official evaluation dataset and evaluation procedure.
 
-## Technologies Used
+## 🛠️ Technologies Used
 
 - Python
 - PyTorch
 - Torchvision
 - MobileNetV3-Small
 - ONNX
+- ONNX Runtime
 
-## Submission
+## 📌 Final Submission
 
-The final submission artifact is `model.onnx`. Before submitting, verify that the exported model loads successfully, satisfies the parameter and file-size limits, produces the expected six-class output, and achieves the required hidden-test accuracy.
+The primary submission artifact is:
+
+`model.onnx`
+
+The repository also contains `train.py` for training and `README.md` for project documentation.
+
+EcoSort demonstrates a compact image classification pipeline designed around the edge-AI challenge's resource constraints. Its reported local validation performance is promising, while final qualification depends on the official hidden-test evaluation.
