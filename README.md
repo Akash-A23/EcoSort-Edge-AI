@@ -18,7 +18,7 @@ To meet the strict hardware and deployment constraints, we designed a compact, h
 | :--- | :--- | :--- | :--- |
 | **Model Format** | Valid ONNX (`.onnx`) | `models/model.onnx` | ✅ Passed |
 | **Parameter Limit** | $\le 350,000$ parameters | $\sim 40,000$ parameters | ✅ Passed |
-| **File Size Limit** | $\le 1.50\text{ MB}$ | $\sim 200\text{ KB}$ | ✅ Passed |
+| **File Size Limit** | $\le 1.50\text{ MB}$ | $\sim 800\text{ KB}$ | ✅ Passed |
 | **Target Accuracy** | $\ge 75.0\%$ validation/test | Optimized via Cosine Annealing | ✅ Passed |
 
 ---
